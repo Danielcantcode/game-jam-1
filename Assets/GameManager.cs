@@ -1,59 +1,55 @@
 using UnityEngine;
-using TMPro; // Use this if you are using TextMeshPro for UI
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance; // This lets other scripts find the manager easily
+    public static GameManager Instance;
 
+    [Header("Economy Settings")]
     public int score = 0;
     public int credits = 0;
 
-    public TextMeshProUGUI scoreText;   // Drag your UI text here
-    public TextMeshProUGUI creditText;  // Drag your UI text here
+    [Header("UI References")]
+    public TextMeshProUGUI scoreText;   
+    public TextMeshProUGUI creditText;  
 
     void Awake()
     {
-        Instance = this; // Set up the "shortcut" to this script
+        // Singleton pattern to ensure only one GameManager exists
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
-   public void AddReward(int scoreAmount, int creditAmount)
+    void Start()
     {
-    score += scoreAmount;
-    credits += creditAmount;
-
-    // --- THE FIX ---
-    // If score goes below 0, reset it to 0
-    if (score < 0) 
-    {
-        score = 0;
+        UpdateUI();
     }
 
-    // You can do the same for credits if you want!
-    if (credits < 0)
+    // Handles adding (or subtracting) rewards and scores
+    public void AddReward(int scoreAmount, int creditAmount)
     {
-        credits = 0;
+        score += scoreAmount;
+        credits += creditAmount;
+
+        // Clamp values so they never go below zero
+        if (score < 0) score = 0;
+        if (credits < 0) credits = 0;
+
+        UpdateUI();
     }
 
-    UpdateUI();
-    }
-public void LoseCredits(int amount)
+    // Specific function for penalties (like when enemies hit the portal)
+    public void LoseCredits(int amount)
     {
-    credits -= amount;
+        credits -= amount;
+        if (credits < 0) credits = 0;
 
-    // Prevent credits from going below zero
-    if (credits < 0)
-    {
-        credits = 0;
-    }
-
-    UpdateUI(); // Make sure the screen updates with the new number
+        UpdateUI();
     }
 
     void UpdateUI()
-{
-    // \n is the code for "New Line" (the same as hitting Enter)
-    scoreText.text = "SCORE\n" + score;
-    
-    creditText.text = "CREDITS\n" + credits;
-}
+    {
+        if (scoreText != null) scoreText.text = "SCORE\n" + score;
+        if (creditText != null) creditText.text = "CREDITS\n" + credits;
+    }
 }

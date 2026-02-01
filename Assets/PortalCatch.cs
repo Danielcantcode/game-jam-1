@@ -2,11 +2,15 @@ using UnityEngine;
 
 public class PortalCatch : MonoBehaviour
 {
-    public string myColor; // Type "Blue" or "Green" in the Inspector
+    [Tooltip("Set this to 'Blue' or 'Green' in the Inspector")]
+    public string myColor;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // 1. CORRECT CATCH
+        // 1. IGNORE BULLETS
+        if (other.CompareTag("EnemyBullet")) return;
+
+        // 2. CORRECT CATCH (Reward: Score & Credits)
         if (myColor == "Blue" && other.CompareTag("ShipBlue"))
         {
             GameManager.Instance.AddReward(20, 25);
@@ -18,31 +22,32 @@ public class PortalCatch : MonoBehaviour
             Destroy(other.gameObject);
         }
 
-        // 2. ENEMY RAID (Enemy hits a portal)
+        // 3. ENEMY RAID (Penalty: Credits AND 5 HP)
         else if (other.CompareTag("Enemy"))
         {
-            GameManager.Instance.LoseCredits(10); 
+            GameManager.Instance.LoseCredits(10);
             
             StationController station = GetComponentInParent<StationController>();
-            if (station != null)
+            if (station != null) 
             {
-                station.TakeDamage(5f);
+                // We pass the object so the Station knows to lock it from double-damage
+                station.TakeDamage(5f, other.gameObject);
             }
-            
-            Destroy(other.gameObject);
+            else
+            {
+                Destroy(other.gameObject);
+            }
         }
 
-        // 3. WRONG COLOR PENALTIES
-        // If a Blue ship hits the Green portal
-        else if (other.CompareTag("ShipBlue"))
+        // 4. WRONG COLOR PENALTIES
+        else if (myColor == "Green" && other.CompareTag("ShipBlue"))
         {
-            GameManager.Instance.AddReward(-15, 0); // Blue penalty: -15
+            GameManager.Instance.AddReward(-15, 0); 
             Destroy(other.gameObject);
         }
-        // If a Green ship hits the Blue portal
-        else if (other.CompareTag("ShipGreen"))
+        else if (myColor == "Blue" && other.CompareTag("ShipGreen"))
         {
-            GameManager.Instance.AddReward(-10, 0); // Green penalty: -10
+            GameManager.Instance.AddReward(-10, 0); 
             Destroy(other.gameObject);
         }
     }

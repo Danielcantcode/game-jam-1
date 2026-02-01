@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class StationController : MonoBehaviour
 {
@@ -12,9 +13,14 @@ public class StationController : MonoBehaviour
 
     [Header("Combat Settings")]
     public GameObject bulletPrefab; 
-    public Transform firePoint;     
-    public float fireRate = 0.3f;   
+    public Transform firePoint; 
+    public float bulletSpeed = 15f;    
+    public float fireRate = 0.5f; 
     private float nextFireTime = 0f; 
+
+    private HashSet<int> processedIDs = new HashSet<int>();
+
+    void Awake() { gameObject.tag = "Station"; }
 
     void Start()
     {
@@ -27,75 +33,81 @@ public class StationController : MonoBehaviour
     }
 
     void Update()
-    {
-        // Rotation logic
-        if (Input.GetKey(KeyCode.LeftArrow))
-            transform.Rotate(0, 0, rotateSpeed * Time.deltaTime);
-        
-        if (Input.GetKey(KeyCode.RightArrow))
-            transform.Rotate(0, 0, -rotateSpeed * Time.deltaTime);
+{
+    // Rotation logic...
+    if (Input.GetKey(KeyCode.LeftArrow)) transform.Rotate(0, 0, rotateSpeed * Time.deltaTime);
+    if (Input.GetKey(KeyCode.RightArrow)) transform.Rotate(0, 0, -rotateSpeed * Time.deltaTime);
 
-        // Shooting logic
-        if (Input.GetKey(KeyCode.Space) && Time.time >= nextFireTime)
+    // --- IRON-CLAD SEMI-AUTO ---
+    // 1. Check if the cooldown has finished first
+    if (Time.time >= nextFireTime)
+    {
+        // 2. Only if the cooldown is over, do we listen for the key press
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             Shoot();
-            nextFireTime = Time.time + fireRate; 
+            // 3. Lock the gun for the duration of fireRate
+            nextFireTime = Time.time + fireRate;
         }
     }
+}
+
+    void LateUpdate() { processedIDs.Clear(); }
 
     void Shoot()
     {
-        if (bulletPrefab != null && firePoint != null)
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
+        if (rb != null)
         {
-            Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+            rb.linearVelocity = -firePoint.up * bulletSpeed; 
         }
+        Destroy(bullet, 3f);
     }
 
-    // This handles the physical "thud" of things hitting your hull
-    private void OnCollisionEnter2D(Collision2D collision)
+    public void TakeDamage(float amount, GameObject source)
     {
-        // Normal ships = 10 damage
-        if (collision.gameObject.CompareTag("ShipGreen") || 
-            collision.gameObject.CompareTag("ShipBlue") || 
-            collision.gameObject.CompareTag("Enemy"))
-        {
-            TakeDamage(10f); 
-            Destroy(collision.gameObject);
-        }
-        // Asteroids = 30 damage
-        else if (collision.gameObject.CompareTag("Asteroid"))
-        {
-            TakeDamage(30f); 
-            Destroy(collision.gameObject);
-        }
-    }
+        if (source == null) return;
 
-    // This MUST be 'public' so the Bullet script can see it!
-    public void TakeDamage(float amount)
-    {
+        int id = source.GetInstanceID();
+        if (processedIDs.Contains(id)) return;
+        processedIDs.Add(id);
+
         currentHealth -= amount;
-        Debug.Log("Station hit! Current Health: " + currentHealth);
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-        if (healthSlider != null)
-        {
-            healthSlider.value = currentHealth;
-        }
+        if (healthSlider != null) healthSlider.value = currentHealth;
+
+        Debug.Log($"Clean Hit! Source: {source.tag} | HP: {currentHealth}");
 
         if (currentHealth <= 0)
         {
-            currentHealth = 0;
-            // GameManager.Instance.EndGame(); // Uncomment when GameManager is ready
+            UIManager.Instance.ShowGameOver();
         }
+
+        // FIX: The object now disappears on hit
+        Destroy(source); 
     }
 
-private void OnTriggerEnter2D(Collider2D other)
-{
-    // Make sure this matches the Tag you just created!
-    if (other.CompareTag("Station"))
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        // 1. Tell the station to take damage (This happens in StationController)
-        // 2. Destroy this bullet immediately
-        Destroy(gameObject);
+        if (collision.gameObject.CompareTag("Enemy") || collision.gameObject.CompareTag("ShipGreen") || collision.gameObject.CompareTag("ShipBlue"))
+            TakeDamage(10f, collision.gameObject);
+        else if (collision.gameObject.CompareTag("Asteroid"))
+            TakeDamage(30f, collision.gameObject);
     }
-}
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("EnemyBullet"))
+        {
+            EnemyBullet bullet = other.GetComponent<EnemyBullet>();
+            if (bullet != null && bullet.TryDealDamage())
+                TakeDamage(5f, other.gameObject);
+        }
+        else if (other.CompareTag("Enemy"))
+        {
+            TakeDamage(5f, other.gameObject);
+        }
+    }
 }

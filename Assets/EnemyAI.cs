@@ -3,41 +3,42 @@ using UnityEngine;
 public class EnemyAI : MonoBehaviour
 {
     public GameObject enemyBulletPrefab;
-    public float fireRate = 2.0f;
+    public float fireRate = 5.0f; // Seconds between shots
     private float nextFireTime;
 
     void Start()
     {
-        // Randomize the first shot so they don't all fire at the exact same time
+        // Randomize the first shot so they don't all fire at once
         nextFireTime = Time.time + Random.Range(0f, fireRate);
     }
 
     void Update()
     {
-    float distanceToCenter = Vector2.Distance(transform.position, Vector2.zero);
+        float distanceToCenter = Vector2.Distance(transform.position, Vector2.zero);
 
-    // FIXED: Only shoot when within 9 units (well inside the screen)
-    if (distanceToCenter < 9f) 
-    {
-        if (Time.time >= nextFireTime)
+        // Only shoot when within range
+        if (distanceToCenter < 9f) 
         {
-            Shoot();
-            nextFireTime = Time.time + fireRate;
+            if (Time.time >= nextFireTime)
+            {
+                Shoot();
+                // SET THE COOLDOWN: This is the "control"
+                nextFireTime = Time.time + fireRate;
+            }
         }
     }
-    }
+
     void Shoot()
     {
-    if (enemyBulletPrefab != null)
-    {
-        // Calculate direction toward center (0,0)
-        Vector2 direction = (Vector2.zero - (Vector2)transform.position).normalized;
+        // Check if prefab exists and only call Instantiate ONCE
+        if (enemyBulletPrefab != null)
+        {
+            Vector2 direction = (Vector2.zero - (Vector2)transform.position).normalized;
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Quaternion bulletRotation = Quaternion.Euler(0, 0, angle);
 
-        // Offset the spawn position by 1 unit in the direction of the center
-        // This makes the bullet appear at the "nose" of the ship
-        Vector3 spawnPos = transform.position + (Vector3)(direction * 2.0f);
-
-        Instantiate(enemyBulletPrefab, spawnPos, Quaternion.identity);
-    }
+            // Spawn exactly one bullet
+            Instantiate(enemyBulletPrefab, transform.position, bulletRotation);
+        }
     }
 }
