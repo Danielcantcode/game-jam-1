@@ -9,6 +9,9 @@ TagManager:
   - PortalGreen
   - Enemy
   - ShipGreen
+  - Asteroid
+  - EnemyBullet
+  - Station
   layers:
   - Default
   - TransparentFX

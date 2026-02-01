@@ -70,10 +70,12 @@ public class StationController : MonoBehaviour
         }
     }
 
+    // This MUST be 'public' so the Bullet script can see it!
     public void TakeDamage(float amount)
     {
         currentHealth -= amount;
-        
+        Debug.Log("Station hit! Current Health: " + currentHealth);
+
         if (healthSlider != null)
         {
             healthSlider.value = currentHealth;
@@ -82,8 +84,7 @@ public class StationController : MonoBehaviour
         if (currentHealth <= 0)
         {
             currentHealth = 0;
-            Debug.Log("Station Destroyed!");
-            
+            // GameManager.Instance.EndGame(); // Uncomment when GameManager is ready
         }
     }
 
