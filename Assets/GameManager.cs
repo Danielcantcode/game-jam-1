@@ -50,8 +50,10 @@ public void LoseCredits(int amount)
     }
 
     void UpdateUI()
-    {
-        if (scoreText != null) scoreText.text = "Score: " + score;
-        if (creditText != null) creditText.text = "Credits: " + credits;
-    }
+{
+    // \n is the code for "New Line" (the same as hitting Enter)
+    scoreText.text = "SCORE\n" + score;
+    
+    creditText.text = "CREDITS\n" + credits;
+}
 }

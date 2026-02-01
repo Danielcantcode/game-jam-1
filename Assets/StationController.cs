@@ -13,7 +13,8 @@ public class StationController : MonoBehaviour
     [Header("Combat Settings")]
     public GameObject bulletPrefab; 
     public Transform firePoint;     
-    public float bulletSpeed = 15f;
+    public float fireRate = 0.3f;   
+    private float nextFireTime = 0f; 
 
     void Start()
     {
@@ -27,40 +28,45 @@ public class StationController : MonoBehaviour
 
     void Update()
     {
+        // Rotation logic
         if (Input.GetKey(KeyCode.LeftArrow))
             transform.Rotate(0, 0, rotateSpeed * Time.deltaTime);
         
         if (Input.GetKey(KeyCode.RightArrow))
             transform.Rotate(0, 0, -rotateSpeed * Time.deltaTime);
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        // Shooting logic
+        if (Input.GetKey(KeyCode.Space) && Time.time >= nextFireTime)
         {
             Shoot();
+            nextFireTime = Time.time + fireRate; 
         }
     }
 
     void Shoot()
     {
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-        Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
-        if (rb != null)
+        if (bulletPrefab != null && firePoint != null)
         {
-            rb.linearVelocity = -firePoint.up * bulletSpeed; 
+            Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         }
-        Destroy(bullet, 3f);
     }
 
-    // --- NEW: HULL COLLISION LOGIC ---
+    // This handles the physical "thud" of things hitting your hull
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // If a ship hits the station body (NOT the portals)
+        // Normal ships = 10 damage
         if (collision.gameObject.CompareTag("ShipGreen") || 
             collision.gameObject.CompareTag("ShipBlue") || 
             collision.gameObject.CompareTag("Enemy"))
         {
-            TakeDamage(10f); // Lose 10 HP
-            Destroy(collision.gameObject); // Remove ship
-            Debug.Log("Hull hit by " + collision.gameObject.tag + "! -10 HP");
+            TakeDamage(10f); 
+            Destroy(collision.gameObject);
+        }
+        // Asteroids = 30 damage
+        else if (collision.gameObject.CompareTag("Asteroid"))
+        {
+            TakeDamage(30f); 
+            Destroy(collision.gameObject);
         }
     }
 
@@ -75,8 +81,20 @@ public class StationController : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Debug.Log("Game Over!");
-            // We can add a proper Game Over screen call here later!
+            currentHealth = 0;
+            Debug.Log("Station Destroyed!");
+            
         }
     }
+
+private void OnTriggerEnter2D(Collider2D other)
+{
+    // Make sure this matches the Tag you just created!
+    if (other.CompareTag("Station"))
+    {
+        // 1. Tell the station to take damage (This happens in StationController)
+        // 2. Destroy this bullet immediately
+        Destroy(gameObject);
+    }
+}
 }

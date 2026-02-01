@@ -2,10 +2,11 @@ using UnityEngine;
 
 public class ShipSpawner : MonoBehaviour
 {
-    [Header("Ship Prefabs")]
+    [Header("Prefabs")]
     public GameObject shipGreenPrefab;
     public GameObject shipBluePrefab;
     public GameObject enemyPrefab;
+    public GameObject asteroidPrefab;
 
     [Header("Settings")]
     public float spawnRate = 2f;
@@ -19,26 +20,31 @@ public class ShipSpawner : MonoBehaviour
 
     void SpawnRandomShip()
     {
-        // 1. Pick a random position on a big circle around the station
         Vector2 spawnPos = Random.insideUnitCircle.normalized * spawnDistance;
 
-        // 2. Randomly choose which type of ship to spawn
-        int choice = Random.Range(0, 3); // Picks 0, 1, or 2
+        // 1. Increase range to 4 (Picks 0, 1, 2, or 3)
+        int choice = Random.Range(0, 4); 
         GameObject prefabToSpawn;
 
-        if (choice == 0) prefabToSpawn = shipGreenPrefab;
-        else if (choice == 1) prefabToSpawn = shipBluePrefab;
-        else prefabToSpawn = enemyPrefab;
+        // 2. Add the logic for the 4th option
+        if (choice == 0) 
+            prefabToSpawn = shipGreenPrefab;
+        else if (choice == 1) 
+            prefabToSpawn = shipBluePrefab;
+        else if (choice == 2) 
+            prefabToSpawn = enemyPrefab;
+        else 
+            prefabToSpawn = asteroidPrefab; // Now choice '3' spawns the asteroid!
 
-        // 3. Create the ship
-        GameObject newShip = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+        // 3. Create the object
+        GameObject newObject = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
 
-        // 4. Give it a push toward the center (0,0)
-        Rigidbody2D rb = newShip.GetComponent<Rigidbody2D>();
+        // 4. Give it a push toward the center
+        Rigidbody2D rb = newObject.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
             Vector2 direction = (Vector2.zero - spawnPos).normalized;
-            rb.linearVelocity = direction * 3f; // You can make this faster over time!
+            rb.linearVelocity = direction * 3f; 
         }
     }
 }
