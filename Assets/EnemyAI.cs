@@ -13,11 +13,11 @@ public class EnemyAI : MonoBehaviour
     }
 
     void Update()
-{
+    {
     float distanceToCenter = Vector2.Distance(transform.position, Vector2.zero);
 
-    // INCREASED: Now they shoot from further away (13 units instead of 9)
-    if (distanceToCenter < 13f) 
+    // FIXED: Only shoot when within 9 units (well inside the screen)
+    if (distanceToCenter < 9f) 
     {
         if (Time.time >= nextFireTime)
         {
@@ -25,9 +25,9 @@ public class EnemyAI : MonoBehaviour
             nextFireTime = Time.time + fireRate;
         }
     }
-}
+    }
     void Shoot()
-{
+    {
     if (enemyBulletPrefab != null)
     {
         // Calculate direction toward center (0,0)
@@ -39,5 +39,5 @@ public class EnemyAI : MonoBehaviour
 
         Instantiate(enemyBulletPrefab, spawnPos, Quaternion.identity);
     }
-}
+    }
 }
