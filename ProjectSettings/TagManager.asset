@@ -12,7 +12,6 @@ TagManager:
   - Asteroid
   - EnemyBullet
   - Station
-  - ShipRed
   layers:
   - Default
   - TransparentFX
