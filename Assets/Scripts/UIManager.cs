@@ -8,21 +8,28 @@ public class UIManager : MonoBehaviour
 
     [Header("UI Panels")]
     public GameObject mainPanel;
-    public GameObject hudPanel;      // Drag your Health/Score UI here
-    public GameObject pausePanel;    // Create a new Panel for Pause
+    public GameObject hudPanel;
+    public GameObject pausePanel;
     public GameObject storePanel;
     public GameObject optionsPanel;
     public GameObject tutorialPanel;
     public GameObject gameOverPanel;
 
+    [Header("Credit Displays")]
+    public TextMeshProUGUI mainMenuCreditText;
+    public TextMeshProUGUI storeCreditText;
+    
+    // static ensures this persists in memory as long as the game is running
+    private static int currentCredits = 0; 
     private bool isPaused = false;
 
     void Awake()
     {
-        // Singleton setup with a "Duplicate Guard"
         if (Instance == null) 
         {
             Instance = this;
+            // Uncomment this to keep one manager alive forever
+            // DontDestroyOnLoad(gameObject);
         }
         else 
         {
@@ -30,22 +37,20 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        // Start the game frozen so the player can use the Main Menu
         Time.timeScale = 0f;
     }
 
-    void Start()
+   void Start()
     {
-        // Set initial state: Only Main Menu visible
+        // Much cleaner! Just set the initial menu state.
         ShowInitialMenu();
+        UpdateCreditsDisplay(); 
     }
 
     void Update()
     {
-        // ESC Key logic for Pausing
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // Only allow pausing if we aren't in the Main Menu or Game Over
             if (!mainPanel.activeSelf && !gameOverPanel.activeSelf)
             {
                 if (isPaused) ResumeGame();
@@ -54,28 +59,54 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // --- ECONOMY ---
+
+    public void AddCredits(int amount)
+    {
+        currentCredits += amount;
+        UpdateCreditsDisplay();
+    }
+
+
+    // Add this so the text objects can "find" the manager themselves
+    public void RegisterCreditsText(TextMeshProUGUI textObj, bool isMainMenu)
+    {
+        if (isMainMenu) mainMenuCreditText = textObj;
+        else storeCreditText = textObj;
+        
+        UpdateCreditsDisplay(); // Immediately show the right number
+    }
+
+    public void UpdateCreditsDisplay()
+    {
+        string textValue = "Credits\n " + currentCredits.ToString();
+        
+        if (mainMenuCreditText != null) mainMenuCreditText.text = textValue;
+        if (storeCreditText != null) storeCreditText.text = textValue;
+    }
+
     // --- GAMEPLAY FLOW ---
 
     public void StartGame()
     {
-        mainPanel.SetActive(false);
-        hudPanel.SetActive(true);
-        Time.timeScale = 1f; // Unfreeze the world
-        Debug.Log("Game Started!");
+        isPaused = false; // Ensure this is false when game starts
+        if (mainPanel != null) mainPanel.SetActive(false);
+        if (hudPanel != null) hudPanel.SetActive(true);
+        Time.timeScale = 1f; 
     }
 
     public void PauseGame()
     {
         isPaused = true;
         pausePanel.SetActive(true);
-        Time.timeScale = 0f; // Freeze logic
+        Time.timeScale = 0f;
     }
 
     public void ResumeGame()
     {
         isPaused = false;
         pausePanel.SetActive(false);
-        Time.timeScale = 1f; // Back to action
+        Time.timeScale = 1f;
     }
 
     public void RestartGame()
@@ -101,22 +132,38 @@ public class UIManager : MonoBehaviour
     }
 
     public void QuitToMainMenuFromPause()
-{
-    // 1. Unfreeze time so the scene can load properly
-    Time.timeScale = 1f; 
-
-    // 2. Reload the current scene
-    // Because your UIManager script has 'Time.timeScale = 0f' in Awake,
-    // it will automatically start at the Main Menu when it reloads.
-    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-}
+    {
+        // Set time back to normal so the scene can load, 
+        // but the new scene's Awake will freeze it again
+        Time.timeScale = 1f; 
+        isPaused = false; 
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 
     // --- NAVIGATION ---
 
     public void OpenOptions() { SwitchPanel(optionsPanel); }
     public void OpenTutorial() { SwitchPanel(tutorialPanel); }
-    public void OpenStore() { SwitchPanel(storePanel); }
-    public void BackToMain() { SwitchPanel(mainPanel); }
+    
+    public void OpenStore() 
+    { 
+        UpdateCreditsDisplay(); 
+        SwitchPanel(storePanel); 
+    }
+
+    public void BackToMain() 
+    { 
+        UpdateCreditsDisplay(); 
+        
+        if (isPaused) 
+        {
+            SwitchPanel(pausePanel);
+        }
+        else 
+        {
+            SwitchPanel(mainPanel); 
+        }
+    }
 
     private void ShowInitialMenu()
     {
@@ -128,10 +175,11 @@ public class UIManager : MonoBehaviour
 
     private void SwitchPanel(GameObject targetPanel)
     {
-        mainPanel.SetActive(false);
-        optionsPanel.SetActive(false);
-        tutorialPanel.SetActive(false);
-        storePanel.SetActive(false);
+        if (mainPanel) mainPanel.SetActive(false);
+        if (optionsPanel) optionsPanel.SetActive(false);
+        if (tutorialPanel) tutorialPanel.SetActive(false);
+        if (storePanel) storePanel.SetActive(false);
+        if (pausePanel) pausePanel.SetActive(false);
 
         if (targetPanel != null) targetPanel.SetActive(true);
     }

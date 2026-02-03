@@ -11,60 +11,76 @@ public class GameManager : MonoBehaviour
 
     [Header("UI References")]
     public TextMeshProUGUI scoreText;   
-    public TextMeshProUGUI creditText;  
+    public TextMeshProUGUI hudCreditText;   // Rename this to be specific
+    public TextMeshProUGUI menuCreditText;  // NEW: Add this for the Main Menu
+    public TextMeshProUGUI storeCreditText; // NEW: Add this for the Store Panel
 
     void Awake()
     {
-        // Singleton pattern to ensure only one GameManager exists
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
 
     void Start()
     {
+        // 1. LOAD: Pull the saved credits from the device memory
+        credits = PlayerPrefs.GetInt("TotalCredits", 0); 
         UpdateUI();
     }
 
-    // Handles adding (or subtracting) rewards and scores
     public void AddReward(int scoreAmount, int creditAmount)
     {
         score += scoreAmount;
         credits += creditAmount;
 
-        // Clamp values so they never go below zero
         if (score < 0) score = 0;
         if (credits < 0) credits = 0;
 
+        SaveCredits();
         UpdateUI();
     }
 
-    // Specific function for penalties (like when enemies hit the portal)
     public void LoseCredits(int amount)
     {
         credits -= amount;
         if (credits < 0) credits = 0;
 
+        SaveCredits();
         UpdateUI();
     }
 
-    // Add this so the Store can subtract money
-public bool SpendCredits(int cost)
-{
-    if (credits >= cost)
+    public bool SpendCredits(int cost)
     {
-        credits -= cost;
-        UpdateUI();
-        // PlayerPrefs.SetInt("TotalCredits", credits); // Optional: Save it here
-        return true; // The purchase happened!
+        if (credits >= cost)
+        {
+            credits -= cost;
+            SaveCredits();
+            UpdateUI();
+            return true; 
+        }
+        
+        Debug.Log("Not enough credits!");
+        return false; 
     }
-    
-    Debug.Log("Not enough credits!");
-    return false; // Not enough money
-}
+
+    // Helper to keep the code clean
+    private void SaveCredits()
+    {
+        PlayerPrefs.SetInt("TotalCredits", credits);
+        PlayerPrefs.Save();
+    }
 
     void UpdateUI()
     {
         if (scoreText != null) scoreText.text = "SCORE\n" + score;
-        if (creditText != null) creditText.text = "CREDITS\n" + credits;
+        
+        // Update the HUD display
+        if (hudCreditText != null) hudCreditText.text = "CREDITS\n" + credits;
+        
+        // Update the Main Menu display
+        if (menuCreditText != null) menuCreditText.text = "CREDITS\n " + credits;
+        
+        // NEW: Update the Store
+    if (storeCreditText != null) storeCreditText.text = "WALLET: " + credits;
     }
 }
