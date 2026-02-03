@@ -66,28 +66,37 @@ public class StationController : MonoBehaviour
     }
 
     public void TakeDamage(float amount, GameObject source)
+{
+    if (source == null) return;
+
+    int id = source.GetInstanceID();
+    if (processedIDs.Contains(id)) return;
+    processedIDs.Add(id);
+
+    currentHealth -= amount;
+    currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+
+    if (healthSlider != null) healthSlider.value = currentHealth;
+
+    Debug.Log($"Clean Hit! Source: {source.tag} | HP: {currentHealth}");
+
+    if (currentHealth <= 0)
     {
-        if (source == null) return;
-
-        int id = source.GetInstanceID();
-        if (processedIDs.Contains(id)) return;
-        processedIDs.Add(id);
-
-        currentHealth -= amount;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-
-        if (healthSlider != null) healthSlider.value = currentHealth;
-
-        Debug.Log($"Clean Hit! Source: {source.tag} | HP: {currentHealth}");
-
-        if (currentHealth <= 0)
+        // SAFE CHECK: Only call if Instance is not null
+        if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowGameOver();
         }
-
-        // FIX: The object now disappears on hit
-        Destroy(source); 
+        else
+        {
+            Debug.LogWarning("UIManager.Instance is null! Did you forget the UIManager object in this scene?");
+        }
     }
+
+    // Move this ABOVE the UI call if you want it to always disappear, 
+    // but keeping it here is fine as long as the code above doesn't crash.
+    Destroy(source); 
+}
 
     private void OnCollisionEnter2D(Collision2D collision)
     {

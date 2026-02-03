@@ -16,6 +16,13 @@ public class PortalCatch : MonoBehaviour
             GameManager.Instance.AddReward(20, 25);
             Destroy(other.gameObject);
         }
+
+        if (myColor == "Red" && other.CompareTag("ShipRed"))
+        {
+            GameManager.Instance.AddReward(30, 35);
+            Destroy(other.gameObject);
+        }
+
         else if (myColor == "Green" && other.CompareTag("ShipGreen"))
         {
             GameManager.Instance.AddReward(10, 15);

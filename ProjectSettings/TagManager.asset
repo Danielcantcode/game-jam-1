@@ -12,6 +12,11 @@ TagManager:
   - Asteroid
   - EnemyBullet
   - Station
+<<<<<<< .merge_file_Xq5vXm
+=======
+  - PortalRed
+  - Shield
+>>>>>>> .merge_file_O9Be3R
   - ShipRed
   layers:
   - Default

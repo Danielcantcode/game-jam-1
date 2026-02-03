@@ -47,6 +47,21 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
+    // Add this so the Store can subtract money
+public bool SpendCredits(int cost)
+{
+    if (credits >= cost)
+    {
+        credits -= cost;
+        UpdateUI();
+        // PlayerPrefs.SetInt("TotalCredits", credits); // Optional: Save it here
+        return true; // The purchase happened!
+    }
+    
+    Debug.Log("Not enough credits!");
+    return false; // Not enough money
+}
+
     void UpdateUI()
     {
         if (scoreText != null) scoreText.text = "SCORE\n" + score;
