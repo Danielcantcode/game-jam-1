@@ -5,19 +5,17 @@ public class CreditTextLinker : MonoBehaviour
 {
     public bool isMainMenuText;
 
-    void Start() // Start runs after Awake, ensuring Instance is set
+    void Start() 
+{
+    // Wait a tiny fraction of a second for GameManager to Load PlayerPrefs
+    Invoke("LinkToUI", 0.1f);
+}
+
+void LinkToUI()
+{
+    if (UIManager.Instance != null)
     {
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.RegisterCreditsText(GetComponent<TextMeshProUGUI>(), isMainMenuText);
-        }
+        UIManager.Instance.RegisterCreditsText(GetComponent<TextMeshProUGUI>(), isMainMenuText);
     }
-    
-    void OnEnable() // Keep this for when you switch panels without reloading
-    {
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.RegisterCreditsText(GetComponent<TextMeshProUGUI>(), isMainMenuText);
-        }
-    }
+}
 }

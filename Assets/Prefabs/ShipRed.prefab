@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7607321314815546299}
   - component: {fileID: 6654700827045786368}
   - component: {fileID: 2230052494266384323}
+  - component: {fileID: -3724441073800808429}
   m_Layer: 0
   m_Name: ShipRed
   m_TagString: ShipRed
@@ -83,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  m_Sprite: {fileID: 4399997017070374842, guid: d07234056cbb7eb4e9c4b779d48ba877, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -156,3 +157,17 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &-3724441073800808429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7996301657128189123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bee973d6d41d6bf4ea9232607e3edd8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::shipRedBehavior
+  portalTransform: {fileID: 0}
+  speed: 2

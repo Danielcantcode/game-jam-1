@@ -1,10 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
+
+    private static bool shouldStartInGame = false;
 
     [Header("UI Panels")]
     public GameObject mainPanel;
@@ -18,9 +21,16 @@ public class UIManager : MonoBehaviour
     [Header("Credit Displays")]
     public TextMeshProUGUI mainMenuCreditText;
     public TextMeshProUGUI storeCreditText;
+
+    [Header("Feedback UI")]
+    public GameObject warningMessage; 
     
-    // static ensures this persists in memory as long as the game is running
-    private static int currentCredits = 0; 
+    // REDIRECT: currentCredits now pulls directly from your GameManager data
+    private int currentCredits 
+    {
+        get { return GameManager.Instance != null ? GameManager.Instance.credits : 0; }
+    }
+
     private bool isPaused = false;
 
     void Awake()
@@ -28,8 +38,8 @@ public class UIManager : MonoBehaviour
         if (Instance == null) 
         {
             Instance = this;
-            // Uncomment this to keep one manager alive forever
-            // DontDestroyOnLoad(gameObject);
+            // Persistence is handled by GameManager's PlayerPrefs, 
+            // but we keep the Instance alive for UI logic.
         }
         else 
         {
@@ -40,11 +50,18 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-   void Start()
+    void Start()
     {
-        // Much cleaner! Just set the initial menu state.
-        ShowInitialMenu();
-        UpdateCreditsDisplay(); 
+        if (shouldStartInGame)
+        {
+            shouldStartInGame = false; 
+            StartGame(); 
+        }
+        else
+        {
+            ShowInitialMenu();
+            UpdateCreditsDisplay();
+        }
     }
 
     void Update()
@@ -59,37 +76,69 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // --- ECONOMY ---
+    // --- ECONOMY (LINKED TO GAMEMANAGER) ---
 
     public void AddCredits(int amount)
     {
-        currentCredits += amount;
-        UpdateCreditsDisplay();
+        // Redirect to GameManager so it saves via PlayerPrefs
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.AddReward(0, amount);
+            UpdateCreditsDisplay();
+        }
     }
 
-
-    // Add this so the text objects can "find" the manager themselves
     public void RegisterCreditsText(TextMeshProUGUI textObj, bool isMainMenu)
     {
         if (isMainMenu) mainMenuCreditText = textObj;
         else storeCreditText = textObj;
         
-        UpdateCreditsDisplay(); // Immediately show the right number
+        UpdateCreditsDisplay();
     }
 
     public void UpdateCreditsDisplay()
     {
+        // Pulling directly from the property that looks at GameManager.Instance.credits
         string textValue = "Credits\n " + currentCredits.ToString();
         
         if (mainMenuCreditText != null) mainMenuCreditText.text = textValue;
         if (storeCreditText != null) storeCreditText.text = textValue;
     }
 
+    public bool SpendCredits(int amount)
+    {
+        // Redirect to GameManager's spend logic to ensure it saves correctly
+        if (GameManager.Instance != null && GameManager.Instance.SpendCredits(amount))
+        {
+            UpdateCreditsDisplay();
+            return true;
+        }
+        
+        ShowWarning(); 
+        return false;
+    }
+
+    private void ShowWarning()
+    {
+        if (warningMessage != null)
+        {
+            StopAllCoroutines(); 
+            StartCoroutine(HideWarningAfterDelay(2f));
+        }
+    }
+
+    private IEnumerator HideWarningAfterDelay(float delay)
+    {
+        warningMessage.SetActive(true);
+        yield return new WaitForSecondsRealtime(delay); 
+        warningMessage.SetActive(false);
+    }
+
     // --- GAMEPLAY FLOW ---
 
     public void StartGame()
     {
-        isPaused = false; // Ensure this is false when game starts
+        isPaused = false; 
         if (mainPanel != null) mainPanel.SetActive(false);
         if (hudPanel != null) hudPanel.SetActive(true);
         Time.timeScale = 1f; 
@@ -111,6 +160,7 @@ public class UIManager : MonoBehaviour
 
     public void RestartGame()
     {
+        shouldStartInGame = true; 
         Time.timeScale = 1f; 
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
@@ -124,7 +174,6 @@ public class UIManager : MonoBehaviour
 
     public void QuitGame()
     {
-        Debug.Log("Exiting...");
         Application.Quit();
         #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
@@ -133,8 +182,6 @@ public class UIManager : MonoBehaviour
 
     public void QuitToMainMenuFromPause()
     {
-        // Set time back to normal so the scene can load, 
-        // but the new scene's Awake will freeze it again
         Time.timeScale = 1f; 
         isPaused = false; 
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -147,22 +194,20 @@ public class UIManager : MonoBehaviour
     
     public void OpenStore() 
     { 
+        if (warningMessage != null) warningMessage.SetActive(false); 
         UpdateCreditsDisplay(); 
         SwitchPanel(storePanel); 
     }
 
     public void BackToMain() 
     { 
+        StopAllCoroutines();
+        if (warningMessage != null) warningMessage.SetActive(false); 
+        
         UpdateCreditsDisplay(); 
         
-        if (isPaused) 
-        {
-            SwitchPanel(pausePanel);
-        }
-        else 
-        {
-            SwitchPanel(mainPanel); 
-        }
+        if (isPaused) SwitchPanel(pausePanel);
+        else SwitchPanel(mainPanel); 
     }
 
     private void ShowInitialMenu()

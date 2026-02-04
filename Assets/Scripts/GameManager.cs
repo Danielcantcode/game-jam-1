@@ -21,11 +21,18 @@ public class GameManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    void Start()
-    {
-        // 1. LOAD: Pull the saved credits from the device memory
-        credits = PlayerPrefs.GetInt("TotalCredits", 0); 
-        UpdateUI();
+   void Start() 
+   {
+    // 1. Load the credits from memory
+    credits = PlayerPrefs.GetInt("TotalCredits", 0); 
+    
+    // 2. Update local UI
+    UpdateUI(); 
+    
+    // 3. Sync with UIManager so the Store and Menu see the correct number immediately
+    if(UIManager.Instance != null) {
+        UIManager.Instance.UpdateCreditsDisplay();
+    }
     }
 
     public void AddReward(int scoreAmount, int creditAmount)
@@ -79,7 +86,7 @@ public class GameManager : MonoBehaviour
         
         // Update the Main Menu display
         if (menuCreditText != null) menuCreditText.text = "CREDITS\n " + credits;
-        
+
         // NEW: Update the Store
     if (storeCreditText != null) storeCreditText.text = "WALLET: " + credits;
     }

@@ -7,10 +7,14 @@ public class ShipSpawner : MonoBehaviour
     public GameObject shipBluePrefab;
     public GameObject enemyPrefab;
     public GameObject asteroidPrefab;
+    public GameObject shipRedPrefab; 
 
     [Header("Settings")]
     public float spawnRate = 2f;
     public float spawnDistance = 15f; 
+
+    [Header("Upgrade Reference")]
+    public GameObject redPortalObject;
 
     void Start()
     {
@@ -20,26 +24,40 @@ public class ShipSpawner : MonoBehaviour
     void SpawnRandomShip()
     {
         Vector2 spawnPos = Random.insideUnitCircle.normalized * spawnDistance;
-        int choice = Random.Range(0, 4); 
+        
+        int maxChoice = (redPortalObject != null && redPortalObject.activeSelf) ? 5 : 4;
+        int choice = Random.Range(0, maxChoice); 
+        
         GameObject prefabToSpawn = null;
 
-        // Clean selection logic
         if (choice == 0) prefabToSpawn = shipGreenPrefab;
         else if (choice == 1) prefabToSpawn = shipBluePrefab;
         else if (choice == 2) prefabToSpawn = enemyPrefab;
-        else prefabToSpawn = asteroidPrefab; 
+        else if (choice == 3) prefabToSpawn = asteroidPrefab;
+        else prefabToSpawn = shipRedPrefab; 
 
         if (prefabToSpawn != null)
-        {
-            GameObject newObject = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+    {
+        GameObject newObject = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
 
-            Rigidbody2D rb = newObject.GetComponent<Rigidbody2D>();
-            if (rb != null)
+        Rigidbody2D rb = newObject.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            Vector2 direction = (Vector2.zero - spawnPos).normalized;
+            rb.linearVelocity = direction * 2f; 
+        }
+
+        // This part MUST match the variables in shipRedBehavior
+        if (prefabToSpawn == shipRedPrefab)
+        {
+            shipRedBehavior shipScript = newObject.AddComponent<shipRedBehavior>();
+            
+            // Check if we have a portal reference to give to the ship
+            if (redPortalObject != null)
             {
-                Vector2 direction = (Vector2.zero - spawnPos).normalized;
-                // Note: Ensure your objects have 'Gravity Scale' set to 0 in Rigidbody2D!
-                rb.linearVelocity = direction * 3f; 
+                shipScript.portalTransform = redPortalObject.transform;
             }
+        }
         }
     }
 }

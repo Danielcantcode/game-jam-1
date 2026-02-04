@@ -25,50 +25,47 @@ public class StoreManager : MonoBehaviour
     public int shieldCost = 300;
 
     // 1. WEAPON (One-time Upgrade)
+    // Inside StoreManager.cs
+
     public void BuyWeaponUpgrade()
+{
+    // Changed GameManager to UIManager
+    if (station != null && UIManager.Instance.SpendCredits(weaponUpgradeCost))
     {
-        if (station != null && GameManager.Instance.SpendCredits(weaponUpgradeCost))
-        {
-            station.fireRate -= 0.15f; // Significant one-time boost
-            
-            weaponButton.interactable = false;
-            weaponText.text = "MAXED";
-            
-            Debug.Log("Weapon Permanently Upgraded!");
-        }
+        station.fireRate -= 0.15f; 
+        weaponButton.interactable = false;
+        weaponText.text = "MAXED";
+        Debug.Log("Weapon Permanently Upgraded!");
     }
+}   
 
-    // 2. RED PORTAL
     public void BuyRedPortal()
+{
+    if (redPortal != null && !redPortal.activeSelf)
     {
-        if (redPortal != null && !redPortal.activeSelf)
+        // Changed GameManager to UIManager
+        if (UIManager.Instance.SpendCredits(redPortalCost))
         {
-            if (GameManager.Instance.SpendCredits(redPortalCost))
-            {
-                redPortal.SetActive(true);
-                
-                redPortalButton.interactable = false;
-                redPortalText.text = "UNLOCKED";
-                
-                Debug.Log("Red Portal Unlocked!");
-            }
+            redPortal.SetActive(true);
+            redPortalButton.interactable = false;
+            redPortalText.text = "UNLOCKED";
+            Debug.Log("Red Portal Unlocked!");
         }
     }
+}
 
-    // 3. SHIELD SIDE
     public void BuyShieldSide()
+{
+    if (shieldSide != null && !shieldSide.activeSelf)
     {
-        if (shieldSide != null && !shieldSide.activeSelf)
+        // Changed GameManager to UIManager
+        if (UIManager.Instance.SpendCredits(shieldCost))
         {
-            if (GameManager.Instance.SpendCredits(shieldCost))
-            {
-                shieldSide.SetActive(true);
-                
-                shieldButton.interactable = false;
-                shieldText.text = "MOUNTED";
-                
-                Debug.Log("Shield Side Mounted!");
-            }
+            shieldSide.SetActive(true);
+            shieldButton.interactable = false;
+            shieldText.text = "MOUNTED";
+            Debug.Log("Shield Side Mounted!");
         }
     }
+}
 }
