@@ -24,48 +24,87 @@ public class StoreManager : MonoBehaviour
     public int redPortalCost = 500;
     public int shieldCost = 300;
 
-    // 1. WEAPON (One-time Upgrade)
-    // Inside StoreManager.cs
-
-    public void BuyWeaponUpgrade()
-{
-    // Changed GameManager to UIManager
-    if (station != null && UIManager.Instance.SpendCredits(weaponUpgradeCost))
+    void Start()
     {
-        station.fireRate -= 0.15f; 
-        weaponButton.interactable = false;
-        weaponText.text = "MAXED";
-        Debug.Log("Weapon Permanently Upgraded!");
+        // When the game starts, check what we already own
+        LoadUpgrades();
     }
-}   
 
-    public void BuyRedPortal()
-{
-    if (redPortal != null && !redPortal.activeSelf)
+    void LoadUpgrades()
     {
-        // Changed GameManager to UIManager
-        if (UIManager.Instance.SpendCredits(redPortalCost))
+        // Load Red Portal (1 = Owned, 0 = Not Owned)
+        if (PlayerPrefs.GetInt("SavedRedPortal", 0) == 1)
         {
-            redPortal.SetActive(true);
+            if (redPortal != null) redPortal.SetActive(true);
             redPortalButton.interactable = false;
             redPortalText.text = "UNLOCKED";
-            Debug.Log("Red Portal Unlocked!");
         }
-    }
-}
 
-    public void BuyShieldSide()
-{
-    if (shieldSide != null && !shieldSide.activeSelf)
-    {
-        // Changed GameManager to UIManager
-        if (UIManager.Instance.SpendCredits(shieldCost))
+        // Load Shield
+        if (PlayerPrefs.GetInt("SavedShield", 0) == 1)
         {
-            shieldSide.SetActive(true);
+            if (shieldSide != null) shieldSide.SetActive(true);
             shieldButton.interactable = false;
             shieldText.text = "MOUNTED";
-            Debug.Log("Shield Side Mounted!");
+        }
+
+        // Load Weapon Upgrade
+        if (PlayerPrefs.GetInt("SavedWeapon", 0) == 1)
+        {
+            if (station != null) station.fireRate -= 0.15f;
+            weaponButton.interactable = false;
+            weaponText.text = "MAXED";
         }
     }
-}
+
+    public void BuyWeaponUpgrade()
+    {
+        if (station != null && UIManager.Instance.SpendCredits(weaponUpgradeCost))
+        {
+            station.fireRate -= 0.15f;
+            weaponButton.interactable = false;
+            weaponText.text = "MAXED";
+            
+            // AUTO-SAVE
+            PlayerPrefs.SetInt("SavedWeapon", 1);
+            PlayerPrefs.Save();
+            Debug.Log("Weapon Upgrade Saved!");
+        }
+    }
+
+    public void BuyRedPortal()
+    {
+        if (redPortal != null && !redPortal.activeSelf)
+        {
+            if (UIManager.Instance.SpendCredits(redPortalCost))
+            {
+                redPortal.SetActive(true);
+                redPortalButton.interactable = false;
+                redPortalText.text = "UNLOCKED";
+                
+                // AUTO-SAVE
+                PlayerPrefs.SetInt("SavedRedPortal", 1);
+                PlayerPrefs.Save();
+                Debug.Log("Red Portal Saved!");
+            }
+        }
+    }
+
+    public void BuyShieldSide()
+    {
+        if (shieldSide != null && !shieldSide.activeSelf)
+        {
+            if (UIManager.Instance.SpendCredits(shieldCost))
+            {
+                shieldSide.SetActive(true);
+                shieldButton.interactable = false;
+                shieldText.text = "MOUNTED";
+                
+                // AUTO-SAVE
+                PlayerPrefs.SetInt("SavedShield", 1);
+                PlayerPrefs.Save();
+                Debug.Log("Shield Saved!");
+            }
+        }
+    }
 }
